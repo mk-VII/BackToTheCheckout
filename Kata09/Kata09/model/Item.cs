@@ -16,7 +16,7 @@ public class Item
         Price = price;
     }
 
-    public static double GetItemPrice(ItemId id) => id switch
+    private static double GetItemPrice(ItemId id) => id switch
     {
         ItemId.A => ItemPrice.A,
         ItemId.B => ItemPrice.B,

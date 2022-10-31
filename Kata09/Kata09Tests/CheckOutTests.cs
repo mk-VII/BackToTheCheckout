@@ -1,7 +1,7 @@
 using Kata09;
 using Kata09.@enum;
-using Kata09.model;
 using Kata09.model.discounts;
+using Kata09.model.rules;
 
 namespace Kata09Tests;
 
@@ -28,7 +28,7 @@ public class CheckOutTests
     {
         _checkOut = new CheckOut(new[]
         {
-            new Rule(ItemId.A, new BulkDiscount(3, 130.0d))
+            new SingleItemRule(new BulkDiscount(3, 130.0d), ItemId.A)
         });
 
         _checkOut.Scan(ItemId.A);
@@ -43,7 +43,7 @@ public class CheckOutTests
     {
         _checkOut = new CheckOut(new[]
         {
-            new Rule(ItemId.A, new BulkDiscount(3, 130.0d))
+            new SingleItemRule(new BulkDiscount(3, 130.0d), ItemId.A)
         });
 
         _checkOut.Scan(ItemId.A);
@@ -59,8 +59,8 @@ public class CheckOutTests
     {
         _checkOut = new CheckOut(new[]
         {
-            new Rule(ItemId.A, new BulkDiscount(3, 130.0d)),
-            new Rule(ItemId.B, new BulkDiscount(2, 45.0d))
+            new SingleItemRule(new BulkDiscount(3, 130.0d), ItemId.A),
+            new SingleItemRule(new BulkDiscount(2, 45.0d), ItemId.B)
         });
 
         _checkOut.Scan(ItemId.A);
@@ -77,8 +77,8 @@ public class CheckOutTests
     {
         _checkOut = new CheckOut(new[]
         {
-            new Rule(ItemId.A, new BulkDiscount(3, 130.0d)),
-            new Rule(ItemId.B, new BulkDiscount(2, 45.0d))
+            new SingleItemRule(new BulkDiscount(3, 130.0d), ItemId.A),
+            new SingleItemRule(new BulkDiscount(2, 45.0d), ItemId.B)
         });
 
         _checkOut.Scan(ItemId.A);
@@ -97,7 +97,7 @@ public class CheckOutTests
     {
         _checkOut = new CheckOut(new[]
         {
-            new Rule(ItemId.A, new PercentageDiscount(0, 0.10d))
+            new SingleItemRule(new PercentageDiscount(0, 0.10d), ItemId.A)
         });
 
         _checkOut.Scan(ItemId.A);
@@ -110,7 +110,7 @@ public class CheckOutTests
     {
         _checkOut = new CheckOut(new[]
         {
-            new Rule(ItemId.A, new PercentageDiscount(1, 0.10d))
+            new SingleItemRule(new PercentageDiscount(1, 0.10d), ItemId.A)
         });
 
         _checkOut.Scan(ItemId.A);
@@ -124,7 +124,7 @@ public class CheckOutTests
     {
         _checkOut = new CheckOut(new[]
         {
-            new Rule(ItemId.A, new PercentageDiscount(1, 0.10d))
+            new SingleItemRule(new PercentageDiscount(1, 0.10d), ItemId.A)
         });
 
         _checkOut.Scan(ItemId.A);
@@ -137,8 +137,8 @@ public class CheckOutTests
     {
         _checkOut = new CheckOut(new[]
         {
-            new Rule(ItemId.C, new PercentageDiscount(3, 0.50d)),
-            new Rule(ItemId.D, new BulkDiscount(3, 40.0d))
+            new SingleItemRule(new PercentageDiscount(3, 0.50d), ItemId.C),
+            new SingleItemRule(new BulkDiscount(3, 40.0d), ItemId.D)
         });
 
         _checkOut.Scan(ItemId.C);
@@ -157,7 +157,7 @@ public class CheckOutTests
     {
         _checkOut = new CheckOut(new[]
         {
-            new Rule(ItemId.C, new BuyAndGetFreeDiscount(1, 1))
+            new SingleItemRule(new BuyAndGetFreeDiscount(1, 1), ItemId.C)
         });
 
         _checkOut.Scan(ItemId.C);
@@ -174,7 +174,7 @@ public class CheckOutTests
     {
         _checkOut = new CheckOut(new[]
         {
-            new Rule(ItemId.D, new BuyAndGetFreeDiscount(2, 1))
+            new SingleItemRule(new BuyAndGetFreeDiscount(2, 1), ItemId.D)
         });
 
         _checkOut.Scan(ItemId.D);
@@ -192,7 +192,7 @@ public class CheckOutTests
     {
         _checkOut = new CheckOut(new[]
         {
-            new Rule(ItemId.B, new BuyAndGetFreeDiscount(3, 2))
+            new SingleItemRule(new BuyAndGetFreeDiscount(3, 2), ItemId.B)
         });
 
         _checkOut.Scan(ItemId.B);
@@ -206,13 +206,13 @@ public class CheckOutTests
 
         Assert.AreEqual(90.0d, _checkOut.Total);
     }
-    
+
     [TestMethod]
     public void Test_BuyThreeGetTwoFree_FourItems_ReturnsDiscountedTotal()
     {
         _checkOut = new CheckOut(new[]
         {
-            new Rule(ItemId.B, new BuyAndGetFreeDiscount(3, 2))
+            new SingleItemRule(new BuyAndGetFreeDiscount(3, 2), ItemId.B)
         });
 
         _checkOut.Scan(ItemId.B);
@@ -225,13 +225,13 @@ public class CheckOutTests
 
         Assert.AreEqual(90.0d, _checkOut.Total);
     }
-    
+
     [TestMethod]
     public void Test_BuyThreeGetTwoFree_LastItemAdded_ReturnsDiscountedTotal()
     {
         _checkOut = new CheckOut(new[]
         {
-            new Rule(ItemId.B, new BuyAndGetFreeDiscount(3, 2))
+            new SingleItemRule(new BuyAndGetFreeDiscount(3, 2), ItemId.B)
         });
 
         _checkOut.Scan(ItemId.B);
@@ -243,9 +243,81 @@ public class CheckOutTests
         _checkOut.Scan(ItemId.B);
 
         Assert.AreEqual(90.0d, _checkOut.Total);
-        
+
         _checkOut.Scan(ItemId.B);
 
         Assert.AreEqual(90.0d, _checkOut.Total);
+    }
+
+    [TestMethod]
+    public void Test_CompositeDiscount_OneOfEachItem_ReturnsDiscountedTotal()
+    {
+        _checkOut = new CheckOut(new[]
+        {
+            new MultiItemRule(new CompositeDiscount(
+                new[]
+                {
+                    new DiscountPart(ItemId.A, 1),
+                    new DiscountPart(ItemId.B, 1),
+                    new DiscountPart(ItemId.C, 1),
+                    new DiscountPart(ItemId.D, 1)
+                },
+                110.0d))
+        });
+
+        _checkOut.Scan(ItemId.A);
+        
+        Assert.AreEqual(50.0d, _checkOut.Total);
+
+        _checkOut.Scan(ItemId.B);
+        
+        Assert.AreEqual(80.0d, _checkOut.Total);
+
+        _checkOut.Scan(ItemId.C);
+        
+        Assert.AreEqual(100.0d, _checkOut.Total);
+
+        _checkOut.Scan(ItemId.D);
+        
+        Assert.AreEqual(110.0d, _checkOut.Total);
+    }
+    
+    [TestMethod]
+    public void Test_CompositeDiscount_DifferentNumbersOfEachItem_ReturnsDiscountedTotal()
+    {
+        _checkOut = new CheckOut(new[]
+        {
+            new MultiItemRule(new CompositeDiscount(
+                new[]
+                {
+                    new DiscountPart(ItemId.A, 1),
+                    new DiscountPart(ItemId.B, 2),
+                    new DiscountPart(ItemId.C, 3),
+                    new DiscountPart(ItemId.D, 4)
+                },
+                200.0d))
+        });
+
+        _checkOut.Scan(ItemId.A);
+        _checkOut.Scan(ItemId.B);
+        _checkOut.Scan(ItemId.C);
+        _checkOut.Scan(ItemId.D);
+
+        Assert.AreEqual(115.0d, _checkOut.Total);
+
+        _checkOut.Scan(ItemId.B);
+        _checkOut.Scan(ItemId.C);
+        _checkOut.Scan(ItemId.D);
+
+        Assert.AreEqual(180.0d, _checkOut.Total);
+        
+        _checkOut.Scan(ItemId.C);
+        _checkOut.Scan(ItemId.D);
+
+        Assert.AreEqual(215.0d, _checkOut.Total);
+        
+        _checkOut.Scan(ItemId.D);
+
+        Assert.AreEqual(200.0d, _checkOut.Total);
     }
 }

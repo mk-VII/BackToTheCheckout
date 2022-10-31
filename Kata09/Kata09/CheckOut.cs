@@ -1,5 +1,6 @@
 ﻿using Kata09.@enum;
 using Kata09.model;
+using Kata09.model.rules.@base;
 
 namespace Kata09;
 
